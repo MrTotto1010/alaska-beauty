@@ -184,7 +184,7 @@ function ProductPage() {
             </h1>
 
             <p className="mt-5 text-2xl font-semibold text-[#590E1A]">
-              ₡{product.precio.toLocaleString('es-CR')}
+              ${product.precio.toLocaleString('es-CO')}
             </p>
 
             <div className="my-6 h-px bg-[#590E1A]/10" />
