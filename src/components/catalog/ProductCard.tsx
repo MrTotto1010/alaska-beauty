@@ -11,7 +11,7 @@ function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       to={`/producto/${product.id}`}
-      className="group block overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
       <div className="aspect-4/5 overflow-hidden bg-[#F7E9EA]">
         {image ? (
@@ -27,7 +27,7 @@ function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
         <p className="text-xs font-medium uppercase tracking-wider text-[#B88A44]">
           {product.categoria}
         </p>
@@ -36,7 +36,7 @@ function ProductCard({ product }: ProductCardProps) {
           {product.marca || 'Sin marca'}
         </p>
 
-        <h2 className="mt-2 min-h-3rem line-clamp-2 text-base font-semibold leading-6 text-[#590E1A] sm:min-h-[3.5rem] sm:text-lg sm:leading-7">
+        <h2 className="mt-2 min-h-[3rem] line-clamp-2 text-base font-semibold leading-6 text-[#590E1A] sm:min-h-[3.5rem] sm:text-lg sm:leading-7">
           {product.nombre}
         </h2>
 
@@ -44,7 +44,7 @@ function ProductCard({ product }: ProductCardProps) {
           {product.descripcion}
         </p>
 
-        <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-4">
           <p className="text-base font-semibold text-[#590E1A] sm:text-lg">
             ${product.precio.toLocaleString('es-CO')}
           </p>
