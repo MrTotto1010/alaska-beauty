@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { getCategories, getProducts } from '../../services/catalog.service'
@@ -49,6 +48,16 @@ function Catalog() {
     filteredProducts.length / PRODUCTS_PER_PAGE
   )
 
+  // Change page and scroll to the top of the page.
+  const changePage = (page: number) => {
+    setCurrentPage(page)
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
   // Reset the pagination when the filters change.
   useEffect(() => {
     setCurrentPage(1)
@@ -78,7 +87,6 @@ function Catalog() {
   return (
     <section className="min-h-[calc(100vh-5rem)] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-
         {/* Header */}
         <div className="mb-8">
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#B88A44]">
@@ -183,7 +191,7 @@ function Catalog() {
                     <button
                       type="button"
                       onClick={() =>
-                        setCurrentPage((page) => Math.max(page - 1, 1))
+                        changePage(Math.max(currentPage - 1, 1))
                       }
                       disabled={currentPage === 1}
                       aria-label="Página anterior"
@@ -197,7 +205,7 @@ function Catalog() {
                       <button
                         key={pageNumber}
                         type="button"
-                        onClick={() => setCurrentPage(pageNumber)}
+                        onClick={() => changePage(pageNumber)}
                         aria-label={`Ir a la página ${pageNumber}`}
                         aria-current={
                           currentPage === pageNumber
@@ -218,9 +226,7 @@ function Catalog() {
                     <button
                       type="button"
                       onClick={() =>
-                        setCurrentPage((page) =>
-                          Math.min(page + 1, totalPages)
-                        )
+                        changePage(Math.min(currentPage + 1, totalPages))
                       }
                       disabled={currentPage === totalPages}
                       aria-label="Página siguiente"

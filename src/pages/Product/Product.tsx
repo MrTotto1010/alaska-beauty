@@ -15,7 +15,15 @@ function ProductPage() {
   const [error, setError] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
 
+  // Scroll to the top whenever a product page is opened or changed.
   useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [id])
+
+  useEffect(() => {
+    setLoading(true)
+    setError(false)
+
     getProducts()
       .then((products) => {
         const foundProduct = products.find(
@@ -204,9 +212,7 @@ function ProductPage() {
                   : 'text-red-600'
               }`}
             >
-              {product.disponibilidad
-                ? 'Disponible'
-                : 'Agotado'}
+              {product.disponibilidad ? 'Disponible' : 'Agotado'}
             </p>
 
             <button

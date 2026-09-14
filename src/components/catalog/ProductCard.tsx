@@ -36,11 +36,11 @@ function ProductCard({ product }: ProductCardProps) {
           {product.marca || 'Sin marca'}
         </p>
 
-        <h2 className="mt-2 text-base font-semibold text-[#590E1A] sm:text-lg">
+        <h2 className="mt-2 min-h-3rem line-clamp-2 text-base font-semibold leading-6 text-[#590E1A] sm:min-h-[3.5rem] sm:text-lg sm:leading-7">
           {product.nombre}
         </h2>
 
-        <p className="mt-2 min-h-12 line-clamp-2 text-sm leading-6 text-[#590E1A]/60">
+        <p className="mt-2 h-12 line-clamp-2 text-sm leading-6 text-[#590E1A]/60">
           {product.descripcion}
         </p>
 
@@ -56,9 +56,7 @@ function ProductCard({ product }: ProductCardProps) {
                 : 'text-red-600'
             }`}
           >
-            {product.disponibilidad
-              ? 'Disponible'
-              : 'Agotado'}
+            {product.disponibilidad ? 'Disponible' : 'Agotado'}
           </span>
         </div>
       </div>
