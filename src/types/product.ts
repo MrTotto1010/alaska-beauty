@@ -1,3 +1,4 @@
+
 export interface ProductImage {
   id: number
   url: string
@@ -7,6 +8,7 @@ export interface ProductImage {
 export interface Product {
   id: number
   nombre: string
+  marca: string | null
   descripcion: string | null
   precio: number
   disponibilidad: number

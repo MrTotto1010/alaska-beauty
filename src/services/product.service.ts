@@ -1,9 +1,11 @@
+
 import { api } from './api'
 import type { Product } from '../types/product'
 
 interface ProductPayload {
   id_categoria: number
   nombre: string
+  marca: string | null
   descripcion: string
   precio: number
   disponibilidad: number

@@ -88,10 +88,7 @@ async function svgToPng(
 /**
  * Agrega el isotipo como marca de agua.
  */
-function addWatermark(
-  pdf: jsPDF,
-  watermark: string
-) {
+function addWatermark(pdf: jsPDF, watermark: string) {
   const watermarkSize = 115
 
   const x = (PAGE_WIDTH - watermarkSize) / 2
@@ -209,57 +206,57 @@ export async function generateQuotePdf(
   // PRODUCTOS
   // --------------------------------------------------
 
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(10)
-
   items.forEach((item, index) => {
-    const subtotal =
-      item.product.precio * item.cantidad
+    const subtotal = item.product.precio * item.cantidad
 
     const productName =
       item.product.nombre.length > 38
         ? `${item.product.nombre.substring(0, 35)}...`
         : item.product.nombre
 
-    pdf.setTextColor(
-      WINE.r,
-      WINE.g,
-      WINE.b
-    )
+    const productBrand = item.product.marca || 'Sin marca'
+
+    // Nombre del producto
+    pdf.setTextColor(WINE.r, WINE.g, WINE.b)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(10)
 
     pdf.text(productName, 20, y)
 
+    // Marca del producto
+    pdf.setTextColor(GOLD.r, GOLD.g, GOLD.b)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(8)
+
+    pdf.text(productBrand, 20, y + 5)
+
+    // Cantidad
+    pdf.setTextColor(WINE.r, WINE.g, WINE.b)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(10)
+
     pdf.text(String(item.cantidad), 138, y)
 
+    // Subtotal
     pdf.text(formatPrice(subtotal), 160, y)
 
     /*
-     * Espacio limpio entre productos.
-     *
-     * No agregamos líneas ni separadores.
+     * Espacio para el nombre y la marca.
      */
-    y += 12
+    y += 18
 
     /*
      * Si ya no queda suficiente espacio,
      * creamos una nueva página.
      */
-    if (
-      y > 250 &&
-      index < items.length - 1
-    ) {
+    if (y > 250 && index < items.length - 1) {
       pdf.addPage()
 
       addWatermark(pdf, watermark)
 
       y = 30
 
-      pdf.setTextColor(
-        WINE.r,
-        WINE.g,
-        WINE.b
-      )
-
+      pdf.setTextColor(WINE.r, WINE.g, WINE.b)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(10.5)
 
@@ -269,20 +266,12 @@ export async function generateQuotePdf(
 
       y += 8
 
-      pdf.setDrawColor(
-        WINE.r,
-        WINE.g,
-        WINE.b
-      )
-
+      pdf.setDrawColor(WINE.r, WINE.g, WINE.b)
       pdf.setLineWidth(0.2)
 
       pdf.line(20, y, 190, y)
 
       y += 8
-
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(10)
     }
   })
 
@@ -292,12 +281,7 @@ export async function generateQuotePdf(
 
   y += 6
 
-  pdf.setDrawColor(
-    WINE.r,
-    WINE.g,
-    WINE.b
-  )
-
+  pdf.setDrawColor(WINE.r, WINE.g, WINE.b)
   pdf.setLineWidth(0.3)
 
   pdf.line(20, y, 190, y)
@@ -307,23 +291,11 @@ export async function generateQuotePdf(
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(13)
 
-  pdf.setTextColor(
-    WINE.r,
-    WINE.g,
-    WINE.b
-  )
+  pdf.setTextColor(WINE.r, WINE.g, WINE.b)
 
-  pdf.text(
-    'Total estimado',
-    20,
-    y
-  )
+  pdf.text('Total estimado', 20, y)
 
-  pdf.text(
-    formatPrice(totalPrice),
-    160,
-    y
-  )
+  pdf.text(formatPrice(totalPrice), 160, y)
 
   // --------------------------------------------------
   // FOOTER

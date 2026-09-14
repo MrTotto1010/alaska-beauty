@@ -32,6 +32,10 @@ function ProductCard({ product }: ProductCardProps) {
           {product.categoria}
         </p>
 
+        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[#590E1A]/50">
+          {product.marca || 'Sin marca'}
+        </p>
+
         <h2 className="mt-2 text-base font-semibold text-[#590E1A] sm:text-lg">
           {product.nombre}
         </h2>

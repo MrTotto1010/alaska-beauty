@@ -39,6 +39,7 @@ function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
   const [nombre, setNombre] = useState('')
+  const [marca, setMarca] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [precio, setPrecio] = useState('')
   const [idCategoria, setIdCategoria] = useState('')
@@ -97,6 +98,7 @@ function AdminProducts() {
   const openCreateModal = () => {
     setEditingProduct(null)
     setNombre('')
+    setMarca('')
     setDescripcion('')
     setPrecio('')
     setIdCategoria('')
@@ -108,6 +110,7 @@ function AdminProducts() {
   const openEditModal = (product: Product) => {
     setEditingProduct(product)
     setNombre(product.nombre)
+    setMarca(product.marca ?? '')
     setDescripcion(product.descripcion ?? '')
     setPrecio(String(product.precio))
     setIdCategoria(String(product.id_categoria))
@@ -122,6 +125,7 @@ function AdminProducts() {
     setModalOpen(false)
     setEditingProduct(null)
     setNombre('')
+    setMarca('')
     setDescripcion('')
     setPrecio('')
     setIdCategoria('')
@@ -187,6 +191,7 @@ function AdminProducts() {
       const payload = {
         id_categoria: Number(idCategoria),
         nombre: nombre.trim(),
+        marca: marca.trim() || null,
         descripcion: descripcion.trim(),
         precio: numericPrice,
         disponibilidad: disponibilidad ? 1 : 0,
@@ -297,46 +302,46 @@ function AdminProducts() {
   }
 
   const handleUpdateImage = async () => {
-  if (!editingImageId || !selectedProduct) return
+    if (!editingImageId || !selectedProduct) return
 
-  if (!editingImageUrl.trim()) {
-    setImageError('La URL de la imagen es obligatoria.')
-    return
+    if (!editingImageUrl.trim()) {
+      setImageError('La URL de la imagen es obligatoria.')
+      return
+    }
+
+    const numericOrder = Number(editingImageOrder)
+
+    if (
+      !editingImageOrder ||
+      Number.isNaN(numericOrder) ||
+      numericOrder < 1
+    ) {
+      setImageError('Debes ingresar un orden válido.')
+      return
+    }
+
+    try {
+      setImageSaving(true)
+      setImageError('')
+
+      await updateProductImage(editingImageId, {
+        id_producto: selectedProduct.id,
+        url_imagen: editingImageUrl.trim(),
+        orden: numericOrder,
+      })
+
+      cancelEditImage()
+      await loadData()
+    } catch (err) {
+      setImageError(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo actualizar la imagen.'
+      )
+    } finally {
+      setImageSaving(false)
+    }
   }
-
-  const numericOrder = Number(editingImageOrder)
-
-  if (
-    !editingImageOrder ||
-    Number.isNaN(numericOrder) ||
-    numericOrder < 1
-  ) {
-    setImageError('Debes ingresar un orden válido.')
-    return
-  }
-
-  try {
-    setImageSaving(true)
-    setImageError('')
-
-    await updateProductImage(editingImageId, {
-      id_producto: selectedProduct.id,
-      url_imagen: editingImageUrl.trim(),
-      orden: numericOrder,
-    })
-
-    cancelEditImage()
-    await loadData()
-  } catch (err) {
-    setImageError(
-      err instanceof Error
-        ? err.message
-        : 'No se pudo actualizar la imagen.'
-    )
-  } finally {
-    setImageSaving(false)
-  }
-}
 
   const handleDeleteImage = async (image: ProductImage) => {
     const confirmed = window.confirm(
@@ -367,6 +372,7 @@ function AdminProducts() {
 
     return (
       product.nombre.toLowerCase().includes(query) ||
+      (product.marca ?? '').toLowerCase().includes(query) ||
       product.categoria.toLowerCase().includes(query)
     )
   })
@@ -426,7 +432,7 @@ function AdminProducts() {
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar producto o categoría..."
+            placeholder="Buscar producto, marca o categoría..."
             className="w-full rounded-xl border border-[#E6B7BB]/50 bg-[#FDF8F8] py-3 pl-11 pr-4 text-sm text-[#590E1A] outline-none transition focus:border-[#590E1A]"
           />
         </div>
@@ -461,11 +467,15 @@ function AdminProducts() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px]">
+            <table className="w-full min-w-[1150px]">
               <thead>
                 <tr className="border-b border-[#E6B7BB]/30 text-left">
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
                     Producto
+                  </th>
+
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
+                    Marca
                   </th>
 
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
@@ -518,6 +528,10 @@ function AdminProducts() {
                           </p>
                         </div>
                       </div>
+                    </td>
+
+                    <td className="px-6 py-5 text-sm text-[#590E1A]/60">
+                      {product.marca || 'Sin marca'}
                     </td>
 
                     <td className="px-6 py-5 text-sm text-[#590E1A]/60">
@@ -593,9 +607,7 @@ function AdminProducts() {
                 </p>
 
                 <h2 className="mt-1 font-serif text-2xl text-[#590E1A]">
-                  {editingProduct
-                    ? 'Editar producto'
-                    : 'Nuevo producto'}
+                  {editingProduct ? 'Editar producto' : 'Nuevo producto'}
                 </h2>
               </div>
 
@@ -633,6 +645,24 @@ function AdminProducts() {
 
                 <div>
                   <label
+                    htmlFor="product-brand"
+                    className="mb-2 block text-sm font-medium text-[#590E1A]"
+                  >
+                    Marca <span className="font-normal text-[#590E1A]/50">(opcional)</span>
+                  </label>
+
+                  <input
+                    id="product-brand"
+                    type="text"
+                    value={marca}
+                    onChange={(event) => setMarca(event.target.value)}
+                    placeholder="Ej. Samy"
+                    className="w-full rounded-xl border border-[#E6B7BB]/60 px-4 py-3 text-sm text-[#590E1A] outline-none transition focus:border-[#590E1A] focus:ring-2 focus:ring-[#E6B7BB]/30"
+                  />
+                </div>
+
+                <div>
+                  <label
                     htmlFor="product-category"
                     className="mb-2 block text-sm font-medium text-[#590E1A]"
                   >
@@ -642,9 +672,7 @@ function AdminProducts() {
                   <select
                     id="product-category"
                     value={idCategoria}
-                    onChange={(event) =>
-                      setIdCategoria(event.target.value)
-                    }
+                    onChange={(event) => setIdCategoria(event.target.value)}
                     required
                     className="w-full rounded-xl border border-[#E6B7BB]/60 bg-white px-4 py-3 text-sm text-[#590E1A] outline-none transition focus:border-[#590E1A] focus:ring-2 focus:ring-[#E6B7BB]/30"
                   >
@@ -690,9 +718,7 @@ function AdminProducts() {
                   <textarea
                     id="product-description"
                     value={descripcion}
-                    onChange={(event) =>
-                      setDescripcion(event.target.value)
-                    }
+                    onChange={(event) => setDescripcion(event.target.value)}
                     placeholder="Describe brevemente el producto..."
                     rows={4}
                     className="w-full resize-none rounded-xl border border-[#E6B7BB]/60 px-4 py-3 text-sm text-[#590E1A] outline-none transition focus:border-[#590E1A] focus:ring-2 focus:ring-[#E6B7BB]/30"
@@ -716,8 +742,7 @@ function AdminProducts() {
                       </p>
 
                       <p className="mt-1 text-xs text-[#590E1A]/50">
-                        El producto aparecerá como disponible en el
-                        catálogo.
+                        El producto aparecerá como disponible en el catálogo.
                       </p>
                     </div>
                   </label>

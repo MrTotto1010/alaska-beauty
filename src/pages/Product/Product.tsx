@@ -7,7 +7,7 @@ import { useCart } from '../../contexts/CartContext'
 
 function ProductPage() {
   const { id } = useParams()
-    const { addToCart } = useCart()
+  const { addToCart } = useCart()
 
   const [product, setProduct] = useState<ProductType | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -88,13 +88,13 @@ function ProductPage() {
   }
 
   const handleAddToCart = () => {
-  addToCart(product)
-  setAddedToCart(true)
+    addToCart(product)
+    setAddedToCart(true)
 
-  setTimeout(() => {
-    setAddedToCart(false)
-  }, 1500)
-}
+    setTimeout(() => {
+      setAddedToCart(false)
+    }, 1500)
+  }
 
   return (
     <section className="min-h-[calc(100vh-5rem)] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -179,6 +179,10 @@ function ProductPage() {
               {product.categoria}
             </p>
 
+            <p className="mt-2 text-sm font-medium uppercase tracking-[0.15em] text-[#590E1A]/50">
+              {product.marca || 'Sin marca'}
+            </p>
+
             <h1 className="mt-3 font-serif text-4xl leading-tight text-[#590E1A] sm:text-5xl">
               {product.nombre}
             </h1>
@@ -206,13 +210,15 @@ function ProductPage() {
             </p>
 
             <button
-  type="button"
-  disabled={!product.disponibilidad}
-  onClick={handleAddToCart}
-  className="mt-8 w-full rounded-full bg-[#590E1A] px-7 py-3.5 text-sm font-medium text-white transition-all hover:scale-[1.01] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:w-auto"
->
-  {addedToCart ? '✓ Agregado al carrito' : 'Agregar al carrito'}
-</button>
+              type="button"
+              disabled={!product.disponibilidad}
+              onClick={handleAddToCart}
+              className="mt-8 w-full rounded-full bg-[#590E1A] px-7 py-3.5 text-sm font-medium text-white transition-all hover:scale-[1.01] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:w-auto"
+            >
+              {addedToCart
+                ? '✓ Agregado al carrito'
+                : 'Agregar al carrito'}
+            </button>
           </div>
         </div>
       </div>

@@ -124,8 +124,7 @@ function Cart() {
           <div className="space-y-4">
             {items.map((item) => {
               const image = item.product.imagenes[0]?.url
-              const subtotal =
-                item.product.precio * item.cantidad
+              const subtotal = item.product.precio * item.cantidad
 
               return (
                 <div
@@ -158,6 +157,11 @@ function Cart() {
                           {item.product.categoria}
                         </p>
 
+                        {/* Marca */}
+                        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[#590E1A]/50">
+                          {item.product.marca || 'Sin marca'}
+                        </p>
+
                         <Link
                           to={`/producto/${item.product.id}`}
                           className="mt-1 block truncate text-base font-semibold text-[#590E1A] transition-opacity hover:opacity-70 sm:text-lg"
@@ -168,16 +172,11 @@ function Cart() {
 
                       <button
                         type="button"
-                        onClick={() =>
-                          removeFromCart(item.product.id)
-                        }
+                        onClick={() => removeFromCart(item.product.id)}
                         aria-label={`Eliminar ${item.product.nombre}`}
                         className="shrink-0 text-[#590E1A]/35 transition-colors hover:text-red-600"
                       >
-                        <Trash2
-                          size={18}
-                          strokeWidth={1.8}
-                        />
+                        <Trash2 size={18} strokeWidth={1.8} />
                       </button>
                     </div>
 
@@ -222,17 +221,12 @@ function Cart() {
                       <div className="text-right">
                         <p className="text-xs text-[#590E1A]/45">
                           $
-                          {item.product.precio.toLocaleString(
-                            'es-CO'
-                          )}{' '}
+                          {item.product.precio.toLocaleString('es-CO')}{' '}
                           c/u
                         </p>
 
                         <p className="mt-1 text-base font-semibold text-[#590E1A]">
-                          $
-                          {subtotal.toLocaleString(
-                            'es-CO'
-                          )}
+                          ${subtotal.toLocaleString('es-CO')}
                         </p>
                       </div>
                     </div>
@@ -263,10 +257,7 @@ function Cart() {
                   </span>
 
                   <span className="text-lg font-semibold text-[#590E1A]">
-                    $
-                    {totalPrice.toLocaleString(
-                      'es-CO'
-                    )}
+                    ${totalPrice.toLocaleString('es-CO')}
                   </span>
                 </div>
               </div>
