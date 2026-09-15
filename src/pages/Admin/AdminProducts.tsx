@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   Plus,
@@ -35,6 +35,9 @@ function AdminProducts() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
 
+  const PRODUCTS_PER_PAGE = 20
+  const [currentPage, setCurrentPage] = useState(1)
+
   const [modalOpen, setModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
@@ -46,9 +49,7 @@ function AdminProducts() {
   const [disponibilidad, setDisponibilidad] = useState(true)
 
   const [imagesModalOpen, setImagesModalOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(
-    null
-  )
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   const [imageUrl, setImageUrl] = useState('')
   const [imageOrder, setImageOrder] = useState('1')
@@ -247,11 +248,7 @@ function AdminProducts() {
 
     const numericOrder = Number(imageOrder)
 
-    if (
-      !imageOrder ||
-      Number.isNaN(numericOrder) ||
-      numericOrder < 1
-    ) {
+    if (!imageOrder || Number.isNaN(numericOrder) || numericOrder < 1) {
       setImageError('Debes ingresar un orden válido.')
       return
     }
@@ -367,15 +364,43 @@ function AdminProducts() {
     }
   }
 
-  const filteredProducts = products.filter((product) => {
-    const query = search.toLowerCase()
+  const filteredProducts = useMemo(() => {
+    const query = search.trim().toLowerCase()
 
-    return (
-      product.nombre.toLowerCase().includes(query) ||
-      (product.marca ?? '').toLowerCase().includes(query) ||
-      product.categoria.toLowerCase().includes(query)
-    )
-  })
+    if (!query) {
+      return products
+    }
+
+    return products.filter((product) => {
+      return (
+        product.nombre.toLowerCase().includes(query) ||
+        (product.marca ?? '').toLowerCase().includes(query) ||
+        product.categoria.toLowerCase().includes(query)
+      )
+    })
+  }, [products, search])
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)
+  )
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE
+    const endIndex = startIndex + PRODUCTS_PER_PAGE
+
+    return filteredProducts.slice(startIndex, endIndex)
+  }, [filteredProducts, currentPage])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search])
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
 
   const formatPrice = (value: number) =>
     new Intl.NumberFormat('es-CO', {
@@ -466,134 +491,201 @@ function AdminProducts() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1150px]">
-              <thead>
-                <tr className="border-b border-[#E6B7BB]/30 text-left">
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
-                    Producto
-                  </th>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1150px]">
+                <thead>
+                  <tr className="border-b border-[#E6B7BB]/30 text-left">
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
+                      Producto
+                    </th>
 
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
-                    Marca
-                  </th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
+                      Marca
+                    </th>
 
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
-                    Categoría
-                  </th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
+                      Categoría
+                    </th>
 
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
-                    Precio
-                  </th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
+                      Precio
+                    </th>
 
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
-                    Estado
-                  </th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
+                      Estado
+                    </th>
 
-                  <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredProducts.map((product) => (
-                  <tr
-                    key={product.id}
-                    className="border-b border-[#E6B7BB]/20 last:border-b-0"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#F7E9EA]">
-                          {product.imagenes.length > 0 ? (
-                            <img
-                              src={product.imagenes[0].url}
-                              alt={product.nombre}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-[#590E1A]/40">
-                              <ImageIcon size={22} />
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <p className="font-medium text-[#590E1A]">
-                            {product.nombre}
-                          </p>
-
-                          <p className="mt-1 text-xs text-[#590E1A]/40">
-                            ID #{product.id}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-5 text-sm text-[#590E1A]/60">
-                      {product.marca || 'Sin marca'}
-                    </td>
-
-                    <td className="px-6 py-5 text-sm text-[#590E1A]/60">
-                      {product.categoria}
-                    </td>
-
-                    <td className="px-6 py-5 text-sm font-medium text-[#590E1A]">
-                      {formatPrice(product.precio)}
-                    </td>
-
-                    <td className="px-6 py-5">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                          product.disponibilidad === 1
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-gray-100 text-gray-500'
-                        }`}
-                      >
-                        {product.disponibilidad === 1
-                          ? 'Disponible'
-                          : 'No disponible'}
-                      </span>
-                    </td>
-
-                    <td className="px-6 py-5">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openImagesModal(product)}
-                          className="rounded-xl p-2.5 text-[#590E1A]/60 transition hover:bg-[#F7E9EA] hover:text-[#590E1A]"
-                          aria-label={`Gestionar imágenes de ${product.nombre}`}
-                          title="Gestionar imágenes"
-                        >
-                          <ImageIcon size={18} />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(product)}
-                          className="rounded-xl p-2.5 text-[#590E1A]/60 transition hover:bg-[#F7E9EA] hover:text-[#590E1A]"
-                          aria-label={`Editar ${product.nombre}`}
-                          title="Editar producto"
-                        >
-                          <Pencil size={18} />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(product)}
-                          className="rounded-xl p-2.5 text-red-500 transition hover:bg-red-50"
-                          aria-label={`Eliminar ${product.nombre}`}
-                          title="Eliminar producto"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-[#590E1A]/50">
+                      Acciones
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {paginatedProducts.map((product) => (
+                    <tr
+                      key={product.id}
+                      className="border-b border-[#E6B7BB]/20 last:border-b-0"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#F7E9EA]">
+                            {product.imagenes.length > 0 ? (
+                              <img
+                                src={product.imagenes[0].url}
+                                alt={product.nombre}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-[#590E1A]/40">
+                                <ImageIcon size={22} />
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <p className="font-medium text-[#590E1A]">
+                              {product.nombre}
+                            </p>
+
+                            <p className="mt-1 text-xs text-[#590E1A]/40">
+                              ID #{product.id}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-5 text-sm text-[#590E1A]/60">
+                        {product.marca || 'Sin marca'}
+                      </td>
+
+                      <td className="px-6 py-5 text-sm text-[#590E1A]/60">
+                        {product.categoria}
+                      </td>
+
+                      <td className="px-6 py-5 text-sm font-medium text-[#590E1A]">
+                        {formatPrice(product.precio)}
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                            product.disponibilidad === 1
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {product.disponibilidad === 1
+                            ? 'Disponible'
+                            : 'No disponible'}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openImagesModal(product)}
+                            className="rounded-xl p-2.5 text-[#590E1A]/60 transition hover:bg-[#F7E9EA] hover:text-[#590E1A]"
+                            aria-label={`Gestionar imágenes de ${product.nombre}`}
+                            title="Gestionar imágenes"
+                          >
+                            <ImageIcon size={18} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(product)}
+                            className="rounded-xl p-2.5 text-[#590E1A]/60 transition hover:bg-[#F7E9EA] hover:text-[#590E1A]"
+                            aria-label={`Editar ${product.nombre}`}
+                            title="Editar producto"
+                          >
+                            <Pencil size={18} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(product)}
+                            className="rounded-xl p-2.5 text-red-500 transition hover:bg-red-50"
+                            aria-label={`Eliminar ${product.nombre}`}
+                            title="Eliminar producto"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex flex-col gap-4 border-t border-[#E6B7BB]/30 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-[#590E1A]/60">
+                  Mostrando{' '}
+                  <span className="font-medium text-[#590E1A]">
+                    {(currentPage - 1) * PRODUCTS_PER_PAGE + 1}
+                  </span>{' '}
+                  a{' '}
+                  <span className="font-medium text-[#590E1A]">
+                    {Math.min(
+                      currentPage * PRODUCTS_PER_PAGE,
+                      filteredProducts.length
+                    )}
+                  </span>{' '}
+                  de{' '}
+                  <span className="font-medium text-[#590E1A]">
+                    {filteredProducts.length}
+                  </span>{' '}
+                  productos
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((page) => Math.max(1, page - 1))
+                    }
+                    disabled={currentPage === 1}
+                    className="rounded-xl border border-[#E6B7BB] px-3 py-2 text-sm font-medium text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Anterior
+                  </button>
+
+                  {Array.from(
+                    { length: totalPages },
+                    (_, index) => index + 1
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-10 min-w-10 rounded-xl px-3 text-sm font-medium transition ${
+                        currentPage === page
+                          ? 'bg-[#590E1A] text-white'
+                          : 'border border-[#E6B7BB] text-[#590E1A] hover:bg-[#FDF3F4]'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((page) => Math.min(totalPages, page + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="rounded-xl border border-[#E6B7BB] px-3 py-2 text-sm font-medium text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -648,7 +740,10 @@ function AdminProducts() {
                     htmlFor="product-brand"
                     className="mb-2 block text-sm font-medium text-[#590E1A]"
                   >
-                    Marca <span className="font-normal text-[#590E1A]/50">(opcional)</span>
+                    Marca{' '}
+                    <span className="font-normal text-[#590E1A]/50">
+                      (opcional)
+                    </span>
                   </label>
 
                   <input

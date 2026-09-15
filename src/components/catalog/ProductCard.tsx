@@ -6,14 +6,15 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product }: ProductCardProps) {
-  const image = product.imagenes[0]?.url
+  const image = product.imagenes?.[0]?.url
 
   return (
     <Link
       to={`/producto/${product.id}`}
       className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className="aspect-4/5 overflow-hidden bg-[#F7E9EA]">
+      {/* Product image */}
+      <div className="aspect-[4/5] overflow-hidden bg-[#F7E9EA]">
         {image ? (
           <img
             src={image}
@@ -27,6 +28,7 @@ function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
 
+      {/* Product information */}
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <p className="text-xs font-medium uppercase tracking-wider text-[#B88A44]">
           {product.categoria}
@@ -41,9 +43,10 @@ function ProductCard({ product }: ProductCardProps) {
         </h2>
 
         <p className="mt-2 h-12 line-clamp-2 text-sm leading-6 text-[#590E1A]/60">
-          {product.descripcion}
+          {product.descripcion || 'Sin descripción disponible.'}
         </p>
 
+        {/* Price and availability */}
         <div className="mt-auto flex items-center justify-between gap-2 pt-4">
           <p className="text-base font-semibold text-[#590E1A] sm:text-lg">
             ${product.precio.toLocaleString('es-CO')}

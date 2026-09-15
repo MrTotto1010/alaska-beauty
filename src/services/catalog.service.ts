@@ -3,33 +3,66 @@ import type { Product } from '../types/product'
 import type { Category } from '../types/category'
 
 interface ProductsResponse {
-  success: boolean
-  productos: Product[]
+  items?: Product[]
+  productos?: Product[]
 }
 
 interface CategoriesResponse {
-  success: boolean
-  categorias: Category[]
+  items?: Category[]
+  categorias?: Category[]
+}
+
+function normalizeProduct(product: Product): Product {
+  const productWithImages = product as Product & {
+    imagenes?: unknown
+  }
+
+  const images = productWithImages.imagenes
+
+  if (typeof images === 'string') {
+    try {
+      const parsedImages = JSON.parse(images)
+
+      return {
+        ...product,
+        imagenes: Array.isArray(parsedImages) ? parsedImages : [],
+      }
+    } catch {
+      return {
+        ...product,
+        imagenes: [],
+      }
+    }
+  }
+
+  return {
+    ...product,
+    imagenes: Array.isArray(images) ? images : [],
+  }
 }
 
 export async function getProducts(): Promise<Product[]> {
   const response = await fetch(`${api.baseUrl}/catalogo/productos`)
-  const data: ProductsResponse = await response.json()
 
-  if (!response.ok || !data.success) {
+  if (!response.ok) {
     throw new Error('No se pudieron cargar los productos')
   }
 
-  return data.productos
+  const data: ProductsResponse = await response.json()
+
+  const products = data.items ?? data.productos ?? []
+
+  return products.map(normalizeProduct)
 }
 
 export async function getCategories(): Promise<Category[]> {
   const response = await fetch(`${api.baseUrl}/catalogo/categorias`)
-  const data: CategoriesResponse = await response.json()
 
-  if (!response.ok || !data.success) {
+  if (!response.ok) {
     throw new Error('No se pudieron cargar las categorías')
   }
 
-  return data.categorias
+  const data: CategoriesResponse = await response.json()
+
+  return data.items ?? data.categorias ?? []
 }

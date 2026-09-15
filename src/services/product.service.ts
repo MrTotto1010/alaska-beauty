@@ -61,7 +61,35 @@ export async function getProducts(): Promise<Product[]> {
 
   const data = await response.json()
 
-  return data.productos
+  const items = Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data.productos)
+      ? data.productos
+      : []
+
+  return items.map((product: Product) => {
+    let imagenes = []
+
+    if (Array.isArray(product.imagenes)) {
+      imagenes = product.imagenes
+    } else if (typeof product.imagenes === 'string') {
+      try {
+        const parsedImages = JSON.parse(product.imagenes)
+
+        if (Array.isArray(parsedImages)) {
+          imagenes = parsedImages
+        }
+      } catch {
+        imagenes = []
+      }
+    }
+
+    return {
+      ...product,
+      marca: product.marca ?? null,
+      imagenes,
+    }
+  })
 }
 
 export async function createProduct(

@@ -10,22 +10,48 @@ const PRODUCTS_PER_PAGE = 20
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(
+    null,
+  )
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
+  /*
+   * Load all products and categories once.
+   */
   useEffect(() => {
+    let isMounted = true
+
     Promise.all([getProducts(), getCategories()])
       .then(([productsData, categoriesData]) => {
+        if (!isMounted) return
+
         setProducts(productsData)
         setCategories(categoriesData)
       })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
+      .catch(() => {
+        if (!isMounted) return
+
+        setError(true)
+        setProducts([])
+        setCategories([])
+      })
+      .finally(() => {
+        if (!isMounted) return
+
+        setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
+  /*
+   * Apply search and category filters to all products.
+   */
   const filteredProducts = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
 
@@ -37,40 +63,40 @@ function Catalog() {
       const matchesSearch =
         normalizedSearch === '' ||
         product.nombre.toLowerCase().includes(normalizedSearch) ||
-        product.descripcion?.toLowerCase().includes(normalizedSearch)
+        product.descripcion?.toLowerCase().includes(normalizedSearch) ||
+        product.marca?.toLowerCase().includes(normalizedSearch)
 
       return matchesCategory && matchesSearch
     })
   }, [products, selectedCategory, search])
 
-  // Calculate the total number of pages dynamically.
-  const totalPages = Math.ceil(
-    filteredProducts.length / PRODUCTS_PER_PAGE
+  /*
+   * Calculate the total number of frontend pages.
+   */
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE),
   )
 
-  // Change page and scroll to the top of the page.
-  const changePage = (page: number) => {
-    setCurrentPage(page)
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    })
-  }
-
-  // Reset the pagination when the filters change.
+  /*
+   * Reset to the first page when the filters change.
+   */
   useEffect(() => {
     setCurrentPage(1)
   }, [selectedCategory, search])
 
-  // Keep the current page valid if the number of products changes.
+  /*
+   * Keep the current page valid if the filtered results change.
+   */
   useEffect(() => {
-    if (totalPages > 0 && currentPage > totalPages) {
+    if (currentPage > totalPages) {
       setCurrentPage(totalPages)
     }
   }, [currentPage, totalPages])
 
-  // Get only the products that belong to the current page.
+  /*
+   * Get only the products for the current frontend page.
+   */
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE
     const endIndex = startIndex + PRODUCTS_PER_PAGE
@@ -78,10 +104,26 @@ function Catalog() {
     return filteredProducts.slice(startIndex, endIndex)
   }, [filteredProducts, currentPage])
 
-  // Generate the page buttons dynamically.
+  /*
+   * Change page and scroll to the top.
+   */
+  const changePage = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages)
+
+    setCurrentPage(nextPage)
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
+  /*
+   * Generate page buttons.
+   */
   const pageNumbers = Array.from(
     { length: totalPages },
-    (_, index) => index + 1
+    (_, index) => index + 1,
   )
 
   return (
@@ -161,7 +203,7 @@ function Catalog() {
         )}
 
         {/* Error */}
-        {error && (
+        {error && !loading && (
           <p className="text-red-600">
             No pudimos cargar los productos.
           </p>
@@ -170,7 +212,7 @@ function Catalog() {
         {/* Products */}
         {!loading && !error && (
           <>
-            {filteredProducts.length > 0 ? (
+            {paginatedProducts.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                   {paginatedProducts.map((product) => (
@@ -190,9 +232,7 @@ function Catalog() {
                     {/* Previous page */}
                     <button
                       type="button"
-                      onClick={() =>
-                        changePage(Math.max(currentPage - 1, 1))
-                      }
+                      onClick={() => changePage(currentPage - 1)}
                       disabled={currentPage === 1}
                       aria-label="Página anterior"
                       className="flex h-10 w-10 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
@@ -200,7 +240,7 @@ function Catalog() {
                       <ChevronLeft size={18} />
                     </button>
 
-                    {/* Dynamic page numbers */}
+                    {/* Page numbers */}
                     {pageNumbers.map((pageNumber) => (
                       <button
                         key={pageNumber}
@@ -225,9 +265,7 @@ function Catalog() {
                     {/* Next page */}
                     <button
                       type="button"
-                      onClick={() =>
-                        changePage(Math.min(currentPage + 1, totalPages))
-                      }
+                      onClick={() => changePage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       aria-label="Página siguiente"
                       className="flex h-10 w-10 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
