@@ -9,6 +9,10 @@ import {
   Package,
   Image as ImageIcon,
   Link,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight,
 } from 'lucide-react'
 import type { Product, ProductImage } from '../../types/product'
 import type { Category } from '../../types/category'
@@ -402,6 +406,37 @@ function AdminProducts() {
     }
   }, [currentPage, totalPages])
 
+  /*
+   * Generate the three visible page numbers.
+   *
+   * Page 1  -> 1 2 3
+   * Page 2  -> 1 2 3
+   * Page 3  -> 2 3 4
+   * Page 4  -> 3 4 5
+   * ...
+   * Page 27 -> 26 27 28
+   * Page 28 -> 27 28 29
+   * Page 29 -> 27 28 29
+   */
+  const visiblePages = useMemo(() => {
+    if (totalPages <= 3) {
+      return Array.from(
+        { length: totalPages },
+        (_, index) => index + 1
+      )
+    }
+
+    if (currentPage <= 2) {
+      return [1, 2, 3]
+    }
+
+    if (currentPage >= totalPages - 1) {
+      return [totalPages - 2, totalPages - 1, totalPages]
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1]
+  }, [currentPage, totalPages])
+
   const formatPrice = (value: number) =>
     new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -642,45 +677,83 @@ function AdminProducts() {
                   productos
                 </p>
 
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+                <div className="flex items-center justify-center gap-1.5 sm:justify-end">
+                  {/* First page */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    aria-label="Ir a la primera página"
+                    title="Primera página"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E6B7BB] text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ChevronsLeft size={17} />
+                  </button>
+
+                  {/* Previous page */}
                   <button
                     type="button"
                     onClick={() =>
                       setCurrentPage((page) => Math.max(1, page - 1))
                     }
                     disabled={currentPage === 1}
-                    className="rounded-xl border border-[#E6B7BB] px-3 py-2 text-sm font-medium text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Página anterior"
+                    title="Página anterior"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E6B7BB] text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-30"
                   >
-                    Anterior
+                    <ChevronLeft size={17} />
                   </button>
 
-                  {Array.from(
-                    { length: totalPages },
-                    (_, index) => index + 1
-                  ).map((page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      onClick={() => setCurrentPage(page)}
-                      className={`h-10 min-w-10 rounded-xl px-3 text-sm font-medium transition ${
-                        currentPage === page
-                          ? 'bg-[#590E1A] text-white'
-                          : 'border border-[#E6B7BB] text-[#590E1A] hover:bg-[#FDF3F4]'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {/* Page numbers */}
+                  {visiblePages.map((page) => {
+                    const isCurrentPage = currentPage === page
 
+                    return (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setCurrentPage(page)}
+                        aria-label={`Ir a la página ${page}`}
+                        aria-current={
+                          isCurrentPage ? 'page' : undefined
+                        }
+                        className={`flex shrink-0 items-center justify-center rounded-full font-medium transition-all ${
+                          isCurrentPage
+                            ? 'h-12 w-12 bg-[#590E1A] text-base text-white shadow-sm'
+                            : 'h-10 w-10 border border-[#E6B7BB] text-sm text-[#590E1A] hover:bg-[#FDF3F4]'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  })}
+
+                  {/* Next page */}
                   <button
                     type="button"
                     onClick={() =>
-                      setCurrentPage((page) => Math.min(totalPages, page + 1))
+                      setCurrentPage((page) =>
+                        Math.min(totalPages, page + 1)
+                      )
                     }
                     disabled={currentPage === totalPages}
-                    className="rounded-xl border border-[#E6B7BB] px-3 py-2 text-sm font-medium text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Página siguiente"
+                    title="Página siguiente"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E6B7BB] text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-30"
                   >
-                    Siguiente
+                    <ChevronRight size={17} />
+                  </button>
+
+                  {/* Last page */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    aria-label="Ir a la última página"
+                    title="Última página"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E6B7BB] text-[#590E1A] transition hover:bg-[#FDF3F4] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ChevronsRight size={17} />
                   </button>
                 </div>
               </div>

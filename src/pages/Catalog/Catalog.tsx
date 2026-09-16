@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Search,
+} from 'lucide-react'
 import { getCategories, getProducts } from '../../services/catalog.service'
 import type { Product } from '../../types/product'
 import type { Category } from '../../types/category'
@@ -119,12 +125,35 @@ function Catalog() {
   }
 
   /*
-   * Generate page buttons.
+   * Generate the three visible page numbers.
+   *
+   * Examples:
+   * Page 1  -> 1 2 3
+   * Page 2  -> 1 2 3
+   * Page 3  -> 2 3 4
+   * Page 4  -> 3 4 5
+   * Page 27 -> 26 27 28
+   * Page 28 -> 27 28 29
+   * Page 29 -> 27 28 29
    */
-  const pageNumbers = Array.from(
-    { length: totalPages },
-    (_, index) => index + 1,
-  )
+  const visiblePages = useMemo(() => {
+    if (totalPages <= 3) {
+      return Array.from(
+        { length: totalPages },
+        (_, index) => index + 1,
+      )
+    }
+
+    if (currentPage <= 2) {
+      return [1, 2, 3]
+    }
+
+    if (currentPage >= totalPages - 1) {
+      return [totalPages - 2, totalPages - 1, totalPages]
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1]
+  }, [currentPage, totalPages])
 
   return (
     <section className="min-h-[calc(100vh-5rem)] px-4 py-12 sm:px-6 lg:px-8">
@@ -226,41 +255,54 @@ function Catalog() {
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <nav
-                    className="mt-12 flex flex-wrap items-center justify-center gap-2"
+                    className="mt-12 flex items-center justify-center gap-1.5 sm:gap-2"
                     aria-label="Navegación de páginas"
                   >
+                    {/* First page */}
+                    <button
+                      type="button"
+                      onClick={() => changePage(1)}
+                      disabled={currentPage === 1}
+                      aria-label="Ir a la primera página"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <ChevronsLeft size={18} />
+                    </button>
+
                     {/* Previous page */}
                     <button
                       type="button"
                       onClick={() => changePage(currentPage - 1)}
                       disabled={currentPage === 1}
                       aria-label="Página anterior"
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       <ChevronLeft size={18} />
                     </button>
 
                     {/* Page numbers */}
-                    {pageNumbers.map((pageNumber) => (
-                      <button
-                        key={pageNumber}
-                        type="button"
-                        onClick={() => changePage(pageNumber)}
-                        aria-label={`Ir a la página ${pageNumber}`}
-                        aria-current={
-                          currentPage === pageNumber
-                            ? 'page'
-                            : undefined
-                        }
-                        className={`flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm font-medium transition-all ${
-                          currentPage === pageNumber
-                            ? 'bg-[#590E1A] text-white shadow-sm'
-                            : 'border border-[#590E1A]/10 text-[#590E1A] hover:bg-[#E6B7BB]/30'
-                        }`}
-                      >
-                        {pageNumber}
-                      </button>
-                    ))}
+                    {visiblePages.map((pageNumber) => {
+                      const isCurrentPage = currentPage === pageNumber
+
+                      return (
+                        <button
+                          key={pageNumber}
+                          type="button"
+                          onClick={() => changePage(pageNumber)}
+                          aria-label={`Ir a la página ${pageNumber}`}
+                          aria-current={
+                            isCurrentPage ? 'page' : undefined
+                          }
+                          className={`flex shrink-0 items-center justify-center rounded-full font-medium transition-all ${
+                            isCurrentPage
+                              ? 'h-12 w-12 bg-[#590E1A] text-base text-white shadow-sm'
+                              : 'h-10 w-10 border border-[#590E1A]/10 text-sm text-[#590E1A] hover:bg-[#E6B7BB]/30'
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      )
+                    })}
 
                     {/* Next page */}
                     <button
@@ -268,9 +310,20 @@ function Catalog() {
                       onClick={() => changePage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       aria-label="Página siguiente"
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       <ChevronRight size={18} />
+                    </button>
+
+                    {/* Last page */}
+                    <button
+                      type="button"
+                      onClick={() => changePage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      aria-label="Ir a la última página"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#590E1A]/10 text-[#590E1A] transition-all hover:bg-[#E6B7BB]/30 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <ChevronsRight size={18} />
                     </button>
                   </nav>
                 )}
